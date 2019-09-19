@@ -21,11 +21,11 @@ Changes from WJ200 component (in 2014 @ commit e17d199):
     - Operating frequency 0x0002
 - Fix segfaults with bits array (reading 11 bits from modbus => array with 11 elements)
 
-TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
-- license (linuxcnc a63ec76)
-- heatsink-temp (linuxcnc fcef430)
-- output current monitor (linuxcnc 11ee2b9)
-- add dynamic --device argument (linuxcnc 98bee0d)
+Changes from WJ200 component (in 2019 @ commit a63ec76):
+- License (linuxcnc a63ec76)
+- TODO heatsink-temp (linuxcnc fcef430)
+- TODO output current monitor (linuxcnc 11ee2b9)
+- TODO add dynamic --device argument (linuxcnc 98bee0d)
 - warn on unhandled arguments (linuxcnc 5a617cb)
 
 TODO:

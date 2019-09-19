@@ -225,7 +225,16 @@ void userinit(int argc, char **argv) {
                 }
                 break;
             default:
+                // unlikely
+                fprintf(stderr, "internal error: invalid option index!\n");
                 exit(1);
+        }
+    }
+
+    if (opt_index < argc) {
+        fprintf(stderr, "WARNING: unhandled arguments to x200-vfd driver:\n");
+        for (int i = optind; i < argc; i ++) {
+            fprintf(stderr, "    %s\n", argv[i]);
         }
     }
 
