@@ -42,6 +42,8 @@ Other new changes:
 
 TODO document
 
+Note that arguments must be supplied using equal signs (due to unhandled argument checking).
+
 ## Dependencies
 
 - libmodbus
