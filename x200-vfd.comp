@@ -1,7 +1,7 @@
 component x200_vfd "Hitachi x200 modbus driver (andrewsuzuki)";
 param rw unsigned mbslaveaddr     "Modbus slave address";
 pin in float commanded_frequency  "Frequency of vfd";
-pin in bit forward                "1 when forward 0 when reverse";
+pin in bit reverse                "1 when reverse 0 when forward";
 pin in bit run                    "run the vfd";
 pin in bit enable                 "1 to enable the vfd. 0 will remote trip the vfd, thereby disabling it.";
 pin out bit is_running            "1 when running";
@@ -48,15 +48,27 @@ license "GPLv2 or greater";
 typedef struct {
     uint8_t running;
     uint8_t ready;
-    uint8_t direction; // 1 = forward, 0 = reverse
+    uint8_t direction; // 1 = reverse, 0 = forward
     uint8_t at_speed;
     uint8_t alarm;
     uint16_t frequency;
 } x200_status;
 
-// Set the operating frequency of the VFD (coil 0x0002)
-bool x200_setFrequency(modbus_t* ctx, uint16_t frequency) {
-    return modbus_write_registers(ctx, 0x0002 - 1, 1, &frequency) > 0;
+// Set run coil (coil 0x0001) (TRUE or FALSE)
+bool x200_run(modbus_t* ctx, bool on) {
+    return modbus_write_bit(ctx, 0x0001 - 1, on) > 0;
+}
+
+// Change direction (coil 0x0002) (1=forward, 0=reverse)
+// Note that this bit is the inverse of WJ200,
+// and also the inverse of the read direction status (0x000F)
+bool x200_setDirection(modbus_t* ctx, bool isForward) {
+    return modbus_write_bit(ctx, 0x0002 - 1, isForward) > 0;
+}
+
+// Trigger EXT external trip (coil 0x0003)
+bool x200_trip(modbus_t* ctx) {
+    return modbus_write_bit(ctx, 0x0003 - 1, TRUE) > 0;
 }
 
 // Reset the trip status of the VFD (coil 0x0004)
@@ -71,20 +83,9 @@ bool x200_reset(modbus_t* ctx) {
     return rc > 0;
 }
 
-// Set run coil (coil 0x0001) (TRUE or FALSE)
-bool x200_run(modbus_t* ctx, bool on) {
-    return modbus_write_bit(ctx, 0x0001 - 1, on) > 0;
-}
-
-// Change direction (coil 0x0002) (1=forward, 0=reverse)
-// Note that this bit is the inverse of WJ200
-bool x200_setDirection(modbus_t* ctx, bool isForward) {
-    return modbus_write_bit(ctx, 0x0002 - 1, isForward) > 0;
-}
-
-// Trigger EXT external trip (coil 0x0003)
-bool x200_trip(modbus_t* ctx) {
-    return modbus_write_bit(ctx, 0x0003 - 1, TRUE) > 0;
+// Set the operating frequency of the VFD (coil 0x0002)
+bool x200_setFrequency(modbus_t* ctx, uint16_t frequency) {
+    return modbus_write_registers(ctx, 0x0002 - 1, 1, &frequency) > 0;
 }
 
 // Read all relevant coils and registers from X200 and
@@ -125,7 +126,7 @@ bool x200_getStatus(modbus_t* ctx, x200_status* status) {
     // Update status struct with retrieved values
 
     status->running = bits[0]; // 0x000E => => 1=running, 0=stop
-    status->direction = bits[1]; // 0x000F => 1=forward, 0=reverse
+    status->direction = bits[1]; // 0x000F => 1=reverse, 0=forward
     status->ready = bits[2]; // 0x0010 => 1=ready, 0=not
     // 0x0011 to 0x0013 are reserved
     status->alarm = bits[6]; // 0x0014 => 1=trip, 0=normal
@@ -164,6 +165,8 @@ int stop_bits = 1;
 modbus_t *ctx;
 
 void userinit(int argc, char **argv) {
+    // Parse arguments
+
     int opt_index = 0;
     int c = 0;
 
@@ -285,7 +288,7 @@ void user_mainloop(void) {
                 continue;
             }
 
-            // Update HAL out pins with values from status struct
+            // Update HAL out pins with read-only values from status struct
             is_running = status.running;
             is_at_speed = status.at_speed;
             is_ready = status.ready;
@@ -313,7 +316,11 @@ void user_mainloop(void) {
 
                 // Check if in pin forward is different from current reported direction.
                 // If it is different, set the new direction.
-                if (forward != status.direction && !x200_setDirection(ctx, forward)) {
+                // This is confusing because the direction status (0x000F) is
+                // OPPOSITE from the direction command (0x0002).
+                // For direction status, 1=reverse, 0=forward
+                // For direction command, 1=forward, 0=reverse
+                if (reverse != status.direction && !x200_setDirection(ctx, !reverse)) {
                     print_modbus_error(__comp_inst, "failed to set direction");
                     continue;
                 }

@@ -7,15 +7,23 @@ Adapted from the Hitachi WJ200 HAL component.
 Changes from WJ200 component (in 2014 @ commit e17d199):
 - Rename all mentions of "wj200"/"WJ200" to "x200"/"X200"
 - The WJ200 frequency has 0.01Hz resolution whereas the X200 has 0.1Hz resolution. Therefore, the X200 should be scaled by 10, not 100.
-- Coil/Register Addresses:
-    - TODO 
+- Coil Numbers:
+    - Run 0x0001
+    - Direction command 0x0002 => reversed from WJ200
+    - External trip 0x0003
+    - Trip reset 0x0004
+    - Run status 0x000E
+    - Direction status 0x000F
+    - Ready 0x0010
+    - Alarm signal 0x0014
+    - 0x0018
+- Register numbers:
+    - Operating frequency 0x0002
 
 TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
 - license (linuxcnc a63ec76)
 - heatsink-temp (linuxcnc fcef430)
 - output current monitor (linuxcnc 11ee2b9)
-- increase bits array from length 10 to 16 (linuxcnc 97d2452)
-    - => the issue this fixes is segfaulting. Is this necessary with the original x200 change to length 12, with initializing?
 - add dynamic --device argument (linuxcnc 98bee0d)
 - warn on unhandled arguments (linuxcnc 5a617cb)
 
@@ -27,7 +35,7 @@ Other new changes:
 - Corrected formatting
 - More comments
 - WJ200/X200 was reading from an unnecessary number of registers
-- X200 direction wasn't working, enable it (opposite of WJ200 bit)
+- X200 direction command wasn't working, enable it (opposite of WJ200 bit)
 
 ## Loading in LinuxCNC
 
