@@ -20,13 +20,14 @@ TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
 - warn on unhandled arguments (linuxcnc 5a617cb)
 
 TODO possible issues:
-- The 2016 x200 file sets frequency at address at 0x001, but shouldn't it be at 0x002?
 - libmodbus isn't included in the .comp configuration section
+- decide on snake case vs camel case and update accordingly
 
 Other new changes:
 - Corrected formatting
 - More comments
-- added libmodbus to extra compile/link args
+- WJ200/X200 was reading from an unnecessary number of registers
+- X200 direction wasn't working, enable it (opposite of WJ200 bit)
 
 ## Loading in LinuxCNC
 

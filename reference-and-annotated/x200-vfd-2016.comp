@@ -1,7 +1,7 @@
 // This is a X200 component as found at forum.linuxcnc.org by user dannym:
 // https://forum.linuxcnc.org/49-basic-configuration/29881-hitachi-x200-vfd#72646
-// It contains a number of bugs, incorrect registers, and isn't up to date with
-// general changes to the WJ200 component from 2014 to 2019.
+// Note that there are a number of bugs and bad approaches, and isn't up
+// to date with general changes to the WJ200 component from 2014 to 2019.
 // See the annotated version of this file in x200-vfd-2016-annotated-diff.comp
 
 component x200_vfd "Hitachi x200 modbus driver";

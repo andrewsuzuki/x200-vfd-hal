@@ -5,6 +5,7 @@
 
 // This x200 component was found on the linuxcnc forum here:
 // https://forum.linuxcnc.org/49-basic-configuration/29881-hitachi-x200-vfd#72646
+// Note that there are a number of bugs and bad approaches
 
 // Actual changes are marked in comments as [AD]
 
