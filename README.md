@@ -1,4 +1,4 @@
-# x200-vfd
+# x200-vfd-hal
 
 HAL component enabling communication between the Hitachi X200 VFD and LinuxCNC.
 
@@ -21,3 +21,30 @@ TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
 
 TODO possible issues:
 - The 2016 x200 file sets frequency at address at 0x001, but shouldn't it be at 0x002?
+- libmodbus isn't included in the .comp configuration section
+
+Other new changes:
+- Corrected formatting
+- More comments
+- added libmodbus to extra compile/link args
+
+## Loading in LinuxCNC
+
+TODO document
+
+## Dependencies
+
+- libmodbus
+- halcompile, gcc
+
+## Credits
+
+* Andrew Suzuki - @andrewsuzuki - [andrewsuzuki.com](http://andrewsuzuki.com)
+
+## Contributing
+
+Issues / pull requests are welcome!
+
+## License
+
+GPL 2.0
