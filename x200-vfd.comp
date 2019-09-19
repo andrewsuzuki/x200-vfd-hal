@@ -92,8 +92,8 @@ bool x200_setFrequency(modbus_t* ctx, uint16_t frequency) {
 // update struct with values.
 bool x200_getStatus(modbus_t* ctx, x200_status* status) {
     int rc;
-    // TODO should these really be 1s?
-    uint8_t bits[12] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; // [AD] increased from 10 to 12, and initialized with 1s
+    // For reference, relevant bits initialized to FALSE and unused to 0:
+    uint8_t bits[11] = {FALSE, FALSE, FALSE, 0, 0, 0, FALSE, 0, 0, 0, FALSE};
     uint16_t outputFrequencyRegister[1];
 
     // Confusingly, in modbus, coils numbers are offset +1
@@ -101,13 +101,12 @@ bool x200_getStatus(modbus_t* ctx, x200_status* status) {
     // we'll read from address 0x000E-1 = 0x000D
 
     // Read coil numbers 0x000E through 0x0018
-    rc = modbus_read_bits(ctx, 0x000E - 1, 12, bits);
+    rc = modbus_read_bits(ctx, 0x000E - 1, 11, bits);
     if (rc < 0) {
-        // TODO clean up this fprintf
         fprintf(
             stderr,
-            "Readbits fail: RUN%0d DIR%0d READY%0d %0d %0d %0d ALARM%0d %0d %0d %0d AT_SPEED%0d %0d\n",
-            bits[0],bits[1],bits[2],bits[3],bits[4],bits[5],bits[6],bits[7],bits[8],bits[9],bits[10],bits[11]
+            "Readbits fail: RUN%0d DIR%0d READY%0d ALARM%0d AT_SPEED%0d\n",
+            bits[0],bits[1],bits[2],bits[6],bits[10]
         );
         return false;
     }
@@ -133,13 +132,6 @@ bool x200_getStatus(modbus_t* ctx, x200_status* status) {
     status->at_speed = bits[10]; // 0x0018 => 1=on, 0=off
 
     status->frequency = outputFrequencyRegister[1]; // 0x0002 => 0 to 4000 (unscaled!)
-
-    // TODO clean up this fprintf
-    fprintf(
-        stderr,
-        "Bits: RUN%0d DIR%0d READY%0d %0d %0d %0d ALARM%0d %0d %0d %0d AT_SPEED%0d %0d Freq%0d\n",
-        bits[0],bits[1],bits[2],bits[3],bits[4],bits[5],bits[6],bits[7],bits[8],bits[9],bits[10],bits[11],registers[1]
-    );
 
     return true;
 }
