@@ -38,14 +38,39 @@ Other new changes:
 
 Note that arguments must be supplied using equal signs (due to unhandled argument checking).
 
-Loading:
-
 ```
 loadrt x200-vfd --device=/dev/ttyS0 --baud=19200
+
 setp x200-vfd.0.mbslaveaddr 1
+
+# without pncconf (substitute your own signal names)
+net machine-is-on halui.machine.is-on => x200-vfd.0.enable
+net spindle-on motion.spindle-on => x200-vfd.0.run
+net spindle-reverse motion.spindle-reverse => x200-vfd.0.reverse
+net spindle-speed-cmd motion.spindle-speed-out-abs => x200-vfd.0.commanded-frequency
+
+# with pncconf (in custom.hal)
+net machine-is-on => x200-vfd.0.enable
+net spindle-enable => x200-vfd.0.run
+net spindle-ccw => x200-vfd.0.reverse
+net spindle-vel-cmd-rpm-abs => x200-vfd.0.commanded-frequency
+
+# ?
+net spindle-at-speed <= x200-vfd.0.is-at-speed
+
+# Scaling ? trying 60Hz/1RPM
+
+loadrt scale count=1
+addf scale.0 servo-thread
+setp scale.0.gain 60.0
+net spindle-vel-cmd-rpm-abs => scale.0.in
+net spindle-frequency scale.0.out => x200-vfd.0.commanded-frequency
+
 ```
 
-TODO connect to linuxcnc
+TODO more out bits (is-running, is-ready, is-alarm)?
+
+TODO watchdog-out
 
 ## Dependencies
 
