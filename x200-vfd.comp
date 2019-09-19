@@ -1,14 +1,14 @@
 component x200_vfd "Hitachi x200 modbus driver (andrewsuzuki)";
-param rw unsigned mbslaveaddr     "Modbus slave address";
-pin in float commanded_frequency  "Frequency of vfd";
-pin in bit reverse                "1 when reverse 0 when forward";
-pin in bit run                    "run the vfd";
-pin in bit enable                 "1 to enable the vfd. 0 will remote trip the vfd, thereby disabling it.";
-pin out bit is_running            "1 when running";
-pin out bit is_at_speed           "1 when running at assigned frequency";
-pin out bit is_ready              "1 when vfd is ready to run";
-pin out bit is_alarm              "1 when vfd alarm is set";
-pin out bit watchdog_out          "Alternates between 1 and 0 after every update cycle. Feed into a watchdog component to ensure vfd driver is communicating with the vfd properly.";
+param rw unsigned mbslaveaddr       "Modbus slave address";
+pin in float commanded_frequency    "Frequency of vfd";
+pin in bit reverse                  "1 when reverse 0 when forward";
+pin in bit run                      "run the vfd";
+pin in bit enable                   "1 to enable the vfd. 0 will remote trip the vfd, thereby disabling it.";
+pin out bit is_running              "1 when running";
+pin out bit is_at_speed             "1 when running at assigned frequency";
+pin out bit is_ready                "1 when vfd is ready to run";
+pin out bit is_alarm                "1 when vfd alarm is set";
+pin out bit watchdog_out            "Alternates between 1 and 0 after every update cycle. Feed into a watchdog component to ensure vfd driver is communicating with the vfd properly.";
 option userspace;
 option userinit yes;
 option extra_compile_args "-I/usr/local/include/modbus -std=c99";
@@ -64,8 +64,8 @@ bool x200_run(modbus_t* ctx, bool on) {
 // Change direction (coil 0x0002) (1=forward, 0=reverse)
 // Note that this bit is the inverse of WJ200,
 // and also the inverse of the read direction status (0x000F)
-bool x200_setDirection(modbus_t* ctx, bool isForward) {
-    return modbus_write_bit(ctx, 0x0002 - 1, isForward) > 0;
+bool x200_set_direction(modbus_t* ctx, bool is_forward) {
+    return modbus_write_bit(ctx, 0x0002 - 1, is_forward) > 0;
 }
 
 // Trigger EXT external trip (coil 0x0003)
@@ -86,13 +86,13 @@ bool x200_reset(modbus_t* ctx) {
 }
 
 // Set the operating frequency of the VFD (coil 0x0002)
-bool x200_setFrequency(modbus_t* ctx, uint16_t frequency) {
+bool x200_set_frequency(modbus_t* ctx, uint16_t frequency) {
     return modbus_write_registers(ctx, 0x0002 - 1, 1, &frequency) > 0;
 }
 
 // Read all relevant coils and registers from X200 and
 // update struct with values.
-bool x200_getStatus(modbus_t* ctx, x200_status* status) {
+bool x200_get_status(modbus_t* ctx, x200_status* status) {
     int rc;
     // For reference, relevant bits initialized to FALSE and unused to 0:
     uint8_t bits[11] = {FALSE, FALSE, FALSE, 0, 0, 0, FALSE, 0, 0, 0, FALSE};
@@ -122,14 +122,11 @@ bool x200_getStatus(modbus_t* ctx, x200_status* status) {
         return false;
     }
 
-    // TODO output current, heatsink temp
-
     // Update status struct with retrieved values
 
     status->running = bits[0]; // 0x000E => => 1=running, 0=stop
     status->direction = bits[1]; // 0x000F => 1=reverse, 0=forward
     status->ready = bits[2]; // 0x0010 => 1=ready, 0=not
-    // 0x0011 to 0x0013 are reserved
     status->alarm = bits[6]; // 0x0014 => 1=trip, 0=normal
     status->at_speed = bits[10]; // 0x0018 => 1=on, 0=off
 
@@ -150,12 +147,14 @@ void print_modbus_error(struct __comp_state *__comp_inst, const char* msg) {
 }
 
 
-// Modbus connection settings
-char *device = "/dev/ttyS0";
+// Modbus connection settings (all configurable)
 int baud = 9600;
 char parity = 'N';
-int data_bits = 8;
-int stop_bits = 1;
+int databits = 8;
+int stopbits = 1;
+char *device = "/dev/ttyS0";
+
+// Modbus struct
 modbus_t *ctx;
 
 void userinit(int argc, char **argv) {
@@ -165,11 +164,11 @@ void userinit(int argc, char **argv) {
     int c = 0;
 
     static struct option options[] = {
-        {"baud",   required_argument, 0, 0 },
-        {"parity", required_argument, 0, 0 },
-        {"databits", required_argument, 0, 0 },
-        {"stopbits", required_argument, 0, 0 },
-        {"device", required_argument, 0, 0 },
+        {"baud",   required_argument, 0, 0 }, // e.g. --baud=19200
+        {"parity", required_argument, 0, 0 }, // e.g. --parity=n
+        {"databits", required_argument, 0, 0 }, // e.g. --databits=8
+        {"stopbits", required_argument, 0, 0 }, // e.g. --stopbits=1
+        {"device", required_argument, 0, 0 }, // e.g. --device=/dev/ttyS0
         {0, 0, 0, 0}
     };
 
@@ -204,8 +203,8 @@ void userinit(int argc, char **argv) {
                 }
                 break;
             case 2:
-                data_bits = atoi(optarg);
-                if (data_bits == 0) {
+                databits = atoi(optarg);
+                if (databits == 0) {
                     fprintf(
                         stderr,
                         "Invalid argument: databits must be a number. Given '%s'\n",
@@ -215,8 +214,8 @@ void userinit(int argc, char **argv) {
                 }
                 break;
             case 3:
-                stop_bits = atoi(optarg);
-                if (stop_bits == 0) {
+                stopbits = atoi(optarg);
+                if (stopbits == 0) {
                     fprintf(
                         stderr,
                         "Invalid argument: stopbits must be a number. Given '%s'\n",
@@ -243,7 +242,7 @@ void userinit(int argc, char **argv) {
     }
 
     // Initialize modbus_t struct (ctx)
-    ctx = modbus_new_rtu(device, baud, parity, data_bits, stop_bits);
+    ctx = modbus_new_rtu(device, baud, parity, databits, stopbits);
     if (ctx == NULL) {
         fprintf(
             stderr,
@@ -290,7 +289,7 @@ void user_mainloop(void) {
             // pin won't change until we make it all the way through
             // the loop.
 
-            if (!x200_getStatus(ctx, &status)) {
+            if (!x200_get_status(ctx, &status)) {
                 print_modbus_error(__comp_inst, "failed to get status");
                 continue;
             }
@@ -316,7 +315,7 @@ void user_mainloop(void) {
                 // therefore multiply commanded frequency (a float) by 10 for comparison with
                 // reported freq (and for setting).
                 calculated_frequency = (uint16_t)(fabs(commanded_frequency) * 10);
-                if (calculated_frequency != status.frequency && !x200_setFrequency(ctx, calculated_frequency)) {
+                if (calculated_frequency != status.frequency && !x200_set_frequency(ctx, calculated_frequency)) {
                     print_modbus_error(__comp_inst, "failed to set frequency");
                     continue;
                 }
@@ -327,7 +326,7 @@ void user_mainloop(void) {
                 // OPPOSITE from the direction command (0x0002).
                 // For direction status, 1=reverse, 0=forward
                 // For direction command, 1=forward, 0=reverse
-                if (reverse != status.direction && !x200_setDirection(ctx, !reverse)) {
+                if (reverse != status.direction && !x200_set_direction(ctx, !reverse)) {
                     print_modbus_error(__comp_inst, "failed to set direction");
                     continue;
                 }

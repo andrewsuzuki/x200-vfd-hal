@@ -7,7 +7,7 @@ Adapted from the Hitachi WJ200 HAL component.
 Changes from WJ200 component (in 2014 @ commit e17d199):
 - Rename all mentions of "wj200"/"WJ200" to "x200"/"X200"
 - The WJ200 frequency has 0.01Hz resolution whereas the X200 has 0.1Hz resolution. Therefore, the X200 should be scaled by 10, not 100.
-- Coil Numbers:
+- Different Coil Numbers:
     - Run 0x0001
     - Direction command 0x0002 => reversed from WJ200
     - External trip 0x0003
@@ -17,19 +17,15 @@ Changes from WJ200 component (in 2014 @ commit e17d199):
     - Ready 0x0010
     - Alarm signal 0x0014
     - Frequency arrival signal (at speed) 0x0018
-- Register numbers:
+- Different Register numbers:
     - Operating frequency 0x0002
 - Fix segfaults with bits array (reading 11 bits from modbus => array with 11 elements)
+- more fprintfs
 
 Changes from WJ200 component (in 2019 @ commit a63ec76):
 - License (linuxcnc a63ec76)
-- TODO heatsink-temp (linuxcnc fcef430)
-- TODO output current monitor (linuxcnc 11ee2b9)
-- TODO add dynamic --device argument (linuxcnc 98bee0d)
+- add dynamic --device argument (linuxcnc 98bee0d)
 - warn on unhandled arguments (linuxcnc 5a617cb)
-
-TODO:
-- decide on snake case vs camel case and update accordingly
 
 Other new changes:
 - Corrected formatting
@@ -40,9 +36,16 @@ Other new changes:
 
 ## Loading in LinuxCNC
 
-TODO document
-
 Note that arguments must be supplied using equal signs (due to unhandled argument checking).
+
+Loading:
+
+```
+loadrt x200-vfd --device=/dev/ttyS0 --baud=19200
+setp x200-vfd.0.mbslaveaddr 1
+```
+
+TODO connect to linuxcnc
 
 ## Dependencies
 
