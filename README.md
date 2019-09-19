@@ -16,9 +16,10 @@ Changes from WJ200 component (in 2014 @ commit e17d199):
     - Direction status 0x000F
     - Ready 0x0010
     - Alarm signal 0x0014
-    - 0x0018
+    - Frequency arrival signal (at speed) 0x0018
 - Register numbers:
     - Operating frequency 0x0002
+- Fix segfaults with bits array (reading 11 bits from modbus => array with 11 elements)
 
 TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
 - license (linuxcnc a63ec76)
@@ -27,15 +28,15 @@ TODO Changes from WJ200 component (in 2019 @ commit a63ec76):
 - add dynamic --device argument (linuxcnc 98bee0d)
 - warn on unhandled arguments (linuxcnc 5a617cb)
 
-TODO possible issues:
-- libmodbus isn't included in the .comp configuration section
+TODO:
 - decide on snake case vs camel case and update accordingly
 
 Other new changes:
 - Corrected formatting
 - More comments
+- X200 direction command wasn't working, enable it (inverse of WJ200 bit, and inverse of direction status, confusing in both cases)
 - WJ200/X200 was reading from an unnecessary number of registers
-- X200 direction command wasn't working, enable it (opposite of WJ200 bit)
+- Add extra compiler/linker args to refer gcc to libmodbus on Linux CNC's Debian Wheezy (-I/usr/local/include/modbus and -L/usr/local/lib)
 
 ## Loading in LinuxCNC
 

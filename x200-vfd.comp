@@ -11,6 +11,8 @@ pin out bit is_alarm              "1 when vfd alarm is set";
 pin out bit watchdog_out          "Alternates between 1 and 0 after every update cycle. Feed into a watchdog component to ensure vfd driver is communicating with the vfd properly.";
 option userspace;
 option userinit yes;
+option extra_compile_args "-I/usr/local/include/modbus -std=c99";
+option extra_link_args "-L/usr/local/lib -lmodbus";
 license "GPLv2 or greater";
 ;;
 /*
@@ -32,7 +34,7 @@ license "GPLv2 or greater";
 
   You should have received a copy of the GNU Lesser General Public
   License along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA.
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301-1307  USA.
 
   see 'man ./x200_vfd' (after running halcompile --document x200-vfd.comp)
 */
