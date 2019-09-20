@@ -58,11 +58,11 @@ net spindle-vel-cmd-rpm-abs => x200-vfd.0.commanded-frequency
 # ?
 net spindle-at-speed <= x200-vfd.0.is-at-speed
 
-# Scaling ? trying 60Hz/1RPM
+# Scaling ? trying 1RPM/60Hz => 0.0166667
 
 loadrt scale count=1
 addf scale.0 servo-thread
-setp scale.0.gain 60.0
+setp scale.0.gain 0.0166667
 net spindle-vel-cmd-rpm-abs => scale.0.in
 net spindle-frequency scale.0.out => x200-vfd.0.commanded-frequency
 
